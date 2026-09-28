@@ -24,6 +24,12 @@ goto :bootstrap_embedded
 if not exist "%VENV_DIR%\Scripts\python.exe" (
     echo Creating virtual environment...
     %SYSTEM_PY% -m venv "%VENV_DIR%"
+    if errorlevel 1 (
+        echo.
+        echo Failed to create the virtual environment ^(see error above^).
+        pause
+        exit /b 1
+    )
 )
 set "PYTHON=%VENV_DIR%\Scripts\python.exe"
 goto :install_deps
@@ -83,9 +89,27 @@ echo.
 echo Installing dependencies...
 "%PYTHON%" -m pip install --quiet --upgrade pip
 "%PYTHON%" -m pip install --quiet -r requirements.txt
+if errorlevel 1 (
+    echo.
+    echo Dependency installation failed. Re-running with full output so you can see why:
+    echo.
+    "%PYTHON%" -m pip install -r requirements.txt
+    echo.
+    echo ^(See the error above. A common cause is no internet access or a blocked/very restrictive network.^)
+    pause
+    exit /b 1
+)
 
 echo Starting Certificate Generator at http://127.0.0.1:8000 ...
 start "" cmd /c "timeout /t 2 >nul && start "" http://127.0.0.1:8000"
 "%PYTHON%" -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 
+echo.
+if errorlevel 1 (
+    echo The server stopped with an error ^(see the messages above^).
+    echo A common cause is another program already using port 8000 - close it and try again.
+) else (
+    echo The server has stopped.
+)
+pause
 endlocal
