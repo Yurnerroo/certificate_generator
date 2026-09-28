@@ -15,15 +15,10 @@
 <main class="container">
     <form id="cert-form" novalidate>
         <section class="field-group">
-            <label for="names_uk">Імена отримувачів <span class="required">*</span></label>
-            <p class="hint">По одному повному імені на рядок. Кількість рядків = кількість сертифікатів.</p>
-            <textarea id="names_uk" name="names_uk" rows="6" required placeholder="Марук Надія&#10;Іваненко Петро"></textarea>
-        </section>
-
-        <section class="field-group">
-            <label for="names_en">Імена отримувачів (англ.)</label>
-            <p class="hint">Необов'язково. Якщо порожньо — транслітерується автоматично (офіційна таблиця). Має бути стільки ж рядків, скільки й вище.</p>
-            <textarea id="names_en" name="names_en" rows="6" placeholder="Залиште порожнім для автоматичної транслітерації"></textarea>
+            <label>Імена отримувачів <span class="required">*</span></label>
+            <p class="hint">Українською обов'язково, англійською — опціонально (якщо порожньо, транслітерується автоматично). Натисніть «+», щоб додати ще одного отримувача.</p>
+            <div id="recipients-list"></div>
+            <button type="button" id="add-recipient-btn" class="btn-add">+ Додати отримувача</button>
         </section>
 
         <div class="field-row">

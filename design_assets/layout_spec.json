@@ -32,14 +32,16 @@
       ]
     },
     "location": {
-      "box_pt": [409, 510, 648, 550],
+      "box_pt": [409, 520, 648, 550],
+      "note": "Top raised from 510 to 520 (measured to clear the signature ink, whose lowest pixel within this box's x-range is at y=516.7) so the box never overlaps the blue pen signature above it.",
       "lines": [
         {"lang": "uk", "font": "regular", "base_size_pt": 10.7, "orig_bbox_pt": [410.4, 522.4, 552.1, 533.1], "orig_text": "м. Івано-Франківськ, Україна"},
         {"lang": "en", "font": "regular", "base_size_pt": 9.2, "orig_bbox_pt": [410.4, 534.2, 527.5, 543.4], "orig_text": "Ivano-Frankivsk city, Ukraine"}
       ]
     },
     "date": {
-      "box_pt": [650, 510, 792, 550],
+      "box_pt": [650, 520, 734, 550],
+      "note": "Top raised from 510 to 520 to stay row-aligned with the location box. Right edge tightened from 792 to 734 (measured against the diagonal hatch decoration, whose leftmost pixel across this box's y-range is x=744.2 at worst) so redacting/drawing in this box never erases or draws over the hatch pattern. Verified the longest UA month name ('Вересень, 2026') still fits without overlap.",
       "lines": [
         {"lang": "uk", "font": "regular", "base_size_pt": 10.7, "orig_bbox_pt": [656.2, 522.5, 722.2, 533.2], "orig_text": "Липень, 2026"},
         {"lang": "en", "font": "regular", "base_size_pt": 9.2, "orig_bbox_pt": [656.2, 534.2, 698.0, 543.4], "orig_text": "July, 2026"}

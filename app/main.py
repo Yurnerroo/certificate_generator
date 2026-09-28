@@ -36,12 +36,6 @@ templates = Jinja2Templates(directory=str(PROJECT_ROOT / "app" / "templates"))
 _INVALID_FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 
 
-def _parse_lines(text: str) -> List[str]:
-    if not text:
-        return []
-    return [line.strip() for line in text.splitlines() if line.strip()]
-
-
 def _sanitize_filename(text: str) -> str:
     text = (text or "").strip()
     text = _INVALID_FILENAME_CHARS.sub("", text)
@@ -50,9 +44,13 @@ def _sanitize_filename(text: str) -> str:
     return text or "certificate"
 
 
+class RecipientName(BaseModel):
+    name_uk: str
+    name_en: str = ""
+
+
 class GenerateRequest(BaseModel):
-    names_uk: str
-    names_en: str = ""
+    recipients: List[RecipientName]
     title_uk: str
     title_en: str = ""
     location_uk: str
@@ -138,30 +136,22 @@ async def open_folder(request: Request):
 async def generate(payload: GenerateRequest):
     warnings: List[str] = []
 
-    names_uk = _parse_lines(payload.names_uk)
-    if not names_uk:
+    recipients = [
+        (r.name_uk.strip(), r.name_en.strip())
+        for r in payload.recipients
+        if r.name_uk.strip()
+    ]
+    if not recipients:
         return JSONResponse(
             {"success": False, "error": "Список імен отримувачів порожній. Введіть хоча б одне ім'я."},
             status_code=400,
         )
 
-    names_en_raw = _parse_lines(payload.names_en)
-    if names_en_raw:
-        if len(names_en_raw) != len(names_uk):
-            return JSONResponse(
-                {
-                    "success": False,
-                    "error": (
-                        f"Кількість імен українською ({len(names_uk)}) не збігається з кількістю "
-                        f"імен англійською ({len(names_en_raw)}). Перевірте обидва списки — "
-                        f"кожен рядок має відповідати одному й тому ж отримувачу."
-                    ),
-                },
-                status_code=400,
-            )
-        names_en = names_en_raw
-    else:
-        names_en = [transliterate_name(n) for n in names_uk]
+    names_uk = [name_uk for name_uk, _ in recipients]
+    names_en = [
+        (name_en or transliterate_name(name_uk))
+        for name_uk, name_en in recipients
+    ]
 
     title_uk = payload.title_uk.strip()
     if not title_uk:

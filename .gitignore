@@ -223,3 +223,7 @@ config.json
 generated_certificates/
 .pyembed/
 
+# Integration test artifacts (generated PDFs + HTML report; not committed)
+/tests/output/
+/tests/report.html
+

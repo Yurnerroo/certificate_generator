@@ -102,6 +102,61 @@ textarea {
     flex: 1;
 }
 
+#recipients-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.recipient-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.recipient-row .recipient-name-uk,
+.recipient-row .recipient-name-en {
+    flex: 1;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+
+.btn-remove-recipient {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: white;
+    color: #c0392b;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.btn-remove-recipient:hover {
+    background: #fbeaea;
+}
+
+.btn-add {
+    cursor: pointer;
+    border: 1px dashed var(--purple);
+    border-radius: 6px;
+    background: white;
+    color: var(--purple);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 8px 16px;
+}
+
+.btn-add:hover {
+    background: #f0edfb;
+}
+
 .folder-row input {
     flex: 1;
 }
