@@ -219,7 +219,20 @@ def _render_box(
                 budget = remaining_height
             else:
                 budget = remaining_height * uk_budget_fraction
-            fit = _fit_block(draw, texts[lang], font_key, spec["base_size_pt"], max_width, max(budget, min_size_px))
+
+            base_size_pt = spec["base_size_pt"]
+            if lang == "en" and "uk" in fits:
+                # Keep the English line proportionally smaller than the Ukrainian
+                # line's *actual* rendered size (not just its own base size), so
+                # long Ukrainian text that has to shrink a lot doesn't leave the
+                # English translation looking the same size or larger.
+                uk_spec = spec_by_lang.get("uk", {})
+                uk_base_pt = uk_spec.get("base_size_pt") or base_size_pt
+                uk_actual_pt = fits["uk"].font.size / PT_TO_PX
+                ratio = min(base_size_pt / uk_base_pt, 0.95) if uk_base_pt else 0.5
+                base_size_pt = min(base_size_pt, uk_actual_pt * ratio)
+
+            fit = _fit_block(draw, texts[lang], font_key, base_size_pt, max_width, max(budget, min_size_px))
             fits[lang] = fit
             consumed = fit.block_height + (gap_px if not is_last else 0.0)
             remaining_height -= consumed

@@ -34,7 +34,19 @@ fi
 
 echo "Installing dependencies..."
 "$PYTHON" -m pip install --quiet --upgrade pip
-"$PYTHON" -m pip install --quiet -r requirements.txt
+if ! "$PYTHON" -m pip install --quiet -r requirements.txt; then
+    echo
+    echo "Dependency installation failed. Re-running with full output so you can see why:"
+    echo
+    "$PYTHON" -m pip install -r requirements.txt
+    echo
+    echo "A common cause is no internet access, a blocked/very restrictive"
+    echo "network, or missing build tools for a package with no pre-built wheel"
+    echo "for your platform."
+    echo "On Debian/Ubuntu try:  sudo apt install build-essential python3-dev"
+    echo "On macOS try:          xcode-select --install"
+    exit 1
+fi
 
 open_browser() {
     sleep 2

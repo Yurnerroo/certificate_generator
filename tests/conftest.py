@@ -135,3 +135,42 @@ def ink_bbox_pt(image: Image.Image, box_pt: list[float], pad_pt: float = 6.0) ->
     if max_y < 0:
         return None
     return (min_x / PT_TO_PX, min_y / PT_TO_PX, max_x / PT_TO_PX, max_y / PT_TO_PX)
+
+
+def ink_row_bands_pt(image: Image.Image, box_pt: list[float], pad_pt: float = 6.0) -> list[tuple[float, float]]:
+    """Scan the given box_pt region row-by-row for ink and return the list of
+    contiguous (top_pt, bottom_pt) bands separated by blank rows -- e.g. the
+    Ukrainian line(s) form one band, the gap is blank, and the English line
+    forms the next band. Used to measure each language's rendered text height
+    independently without reaching into the renderer's private internals."""
+    x0 = int((box_pt[0] - pad_pt) * PT_TO_PX)
+    y0 = int((box_pt[1] - pad_pt) * PT_TO_PX)
+    x1 = int((box_pt[2] + pad_pt) * PT_TO_PX)
+    y1 = int((box_pt[3] + pad_pt) * PT_TO_PX)
+    px = image.load()
+    w, h = image.size
+    x0, y0 = max(0, x0), max(0, y0)
+    x1, y1 = min(w, x1), min(h, y1)
+
+    row_has_ink = []
+    for y in range(y0, y1):
+        has_ink = False
+        for x in range(x0, x1):
+            r, g, b = px[x, y]
+            if r < 250 or g < 250 or b < 250:
+                has_ink = True
+                break
+        row_has_ink.append(has_ink)
+
+    bands: list[tuple[int, int]] = []
+    start = None
+    for i, v in enumerate(row_has_ink):
+        if v and start is None:
+            start = i
+        elif not v and start is not None:
+            bands.append((start, i - 1))
+            start = None
+    if start is not None:
+        bands.append((start, len(row_has_ink) - 1))
+
+    return [((y0 + s) / PT_TO_PX, (y0 + e) / PT_TO_PX) for s, e in bands]

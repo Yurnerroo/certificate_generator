@@ -1,4 +1,9 @@
 @echo off
+rem If you are reading this because double-clicking run.bat does nothing or
+rem the console flashes and closes instantly, some antivirus/endpoint-security
+rem software on your machine may be blocking .bat script execution. Right-click
+rem "run.ps1" in this folder and choose "Run with PowerShell" instead - it does
+rem exactly the same thing as this script.
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
@@ -8,40 +13,63 @@ set PY_VERSION=3.12.7
 set PYTHON=
 
 rem --- Look for an existing system Python first ---
-py -3 --version >nul 2>&1
+rem NOTE: "py"/"python" must be invoked with "call". Some Python version
+rem managers (e.g. pyenv-win) put a .bat/.cmd "shim" file on PATH instead of
+rem a real .exe. Running a .bat from inside another .bat WITHOUT "call"
+rem permanently hands control to that nested script and never returns here -
+rem the console would just close after it finishes, with no error shown.
+call py -3 --version >nul 2>&1
 if not errorlevel 1 (
     set "SYSTEM_PY=py -3"
-    goto :found_system
+    goto :try_system
 )
-python --version >nul 2>&1
+call python --version >nul 2>&1
 if not errorlevel 1 (
     set "SYSTEM_PY=python"
-    goto :found_system
+    goto :try_system
 )
 goto :bootstrap_embedded
 
-:found_system
+:try_system
 if not exist "%VENV_DIR%\Scripts\python.exe" (
     echo Creating virtual environment...
-    %SYSTEM_PY% -m venv "%VENV_DIR%"
+    call %SYSTEM_PY% -m venv "%VENV_DIR%"
     if errorlevel 1 (
         echo.
-        echo Failed to create the virtual environment ^(see error above^).
-        pause
-        exit /b 1
+        echo Could not create a virtual environment with your installed Python.
+        echo Falling back to a bundled, known-compatible Python runtime instead...
+        echo.
+        rmdir /s /q "%VENV_DIR%" >nul 2>&1
+        goto :bootstrap_embedded
     )
 )
 set "PYTHON=%VENV_DIR%\Scripts\python.exe"
-goto :install_deps
+
+echo Installing dependencies...
+"%PYTHON%" -m pip install --quiet --upgrade pip
+"%PYTHON%" -m pip install --quiet -r requirements.txt
+if errorlevel 1 (
+    echo.
+    echo Installing dependencies failed with your installed Python version.
+    echo This is often caused by pip needing to compile a package from source
+    echo ^(shown above as red "Building wheel for X ... error" messages^) because
+    echo no ready-made package exists for your specific Python version - not
+    echo something wrong with your computer.
+    echo Falling back to a bundled Python runtime that is known to work well
+    echo with this app...
+    echo.
+    rmdir /s /q "%VENV_DIR%" >nul 2>&1
+    goto :bootstrap_embedded
+)
+goto :run_server
 
 :bootstrap_embedded
-rem --- No system Python found: download a private, portable copy. ---
+rem --- Use (and if needed, download) a private, portable copy of Python. ---
 rem     No admin rights or installer needed; it lives entirely inside
 rem     this project folder (.pyembed) and is not put on the system PATH.
 set "PYTHON=%EMBED_DIR%\python.exe"
-if exist "%PYTHON%" goto :install_deps
+if exist "%PYTHON%" goto :install_embedded_deps
 
-echo No Python installation was found on this computer.
 echo Downloading a portable Python %PY_VERSION% runtime just for this app (~11 MB, one-time)...
 if not exist "%EMBED_DIR%" mkdir "%EMBED_DIR%"
 
@@ -85,21 +113,25 @@ echo "Browse..." folder dialog will be unavailable - just paste the output
 echo folder path into the text field instead.
 echo.
 
-:install_deps
+:install_embedded_deps
 echo Installing dependencies...
 "%PYTHON%" -m pip install --quiet --upgrade pip
 "%PYTHON%" -m pip install --quiet -r requirements.txt
 if errorlevel 1 (
     echo.
-    echo Dependency installation failed. Re-running with full output so you can see why:
+    echo Dependency installation failed even with the bundled Python runtime.
+    echo Re-running with full output so you can see why:
     echo.
     "%PYTHON%" -m pip install -r requirements.txt
     echo.
-    echo ^(See the error above. A common cause is no internet access or a blocked/very restrictive network.^)
+    echo ^(A common cause is no internet access, or a corporate/school network
+    echo that blocks access to pypi.org - ask IT to allow it if that's the case.^)
     pause
     exit /b 1
 )
+goto :run_server
 
+:run_server
 echo Starting Certificate Generator at http://127.0.0.1:8000 ...
 start "" cmd /c "timeout /t 2 >nul && start "" http://127.0.0.1:8000"
 "%PYTHON%" -m uvicorn app.main:app --host 127.0.0.1 --port 8000
