@@ -14,10 +14,21 @@ still too large, the font size is shrunk until everything fits neatly inside its
 
 ## Requirements
 
-- Python 3.9+ (Windows, macOS, or Linux)
+- Python 3.9+ (Windows, macOS, or Linux) — **not required on Windows**, see below.
 - Internet access is only needed for the optional auto-translation of course
   title/location into English — everything else, including transliteration of
   names, works fully offline.
+
+### No Python installed? (Windows)
+
+`run.bat` works even without Python pre-installed: if it can't find a system
+Python, it automatically downloads a small (~11 MB), private, portable Python
+runtime into a local `.pyembed/` folder — no admin rights, no installer, and
+nothing is added to your system PATH. This only happens once; subsequent runs
+reuse it. Internet access is required for this one-time download only. The
+portable runtime doesn't include `tkinter`, so the "Browse..." folder-picker
+dialog isn't available in that mode — just paste the output folder path into
+the text field instead.
 
 ## Quick start
 
@@ -63,8 +74,8 @@ baked into the template image — it is not editable from the UI.
 
 | # | Field (Ukrainian label) | Description |
 |---|--------------------------|-------------|
-| 1 | **Імена отримувачів** | Multi-line textarea, one recipient's full name per line (Ukrainian). The number of names entered here determines how many PDF certificates are generated. |
-| 2 | **Імена отримувачів (англ.)** | Optional multi-line textarea. If provided, must have the same number of lines as field 1, in the same order. If left blank, each Ukrainian name is automatically transliterated to Latin script using the official Ukrainian national transliteration table (Resolution of the Cabinet of Ministers of Ukraine No. 55, 2010 — the same rules used for passports). |
+| 1 | **Імена отримувачів** | One row per recipient: a Ukrainian name field and, right next to it, an optional English name field. Click **"+ Додати отримувача"** to add another row. The number of rows (with a non-empty Ukrainian name) determines how many PDF certificates are generated. |
+| 2 | **Імена отримувачів (англ.)** | The English field next to each recipient's Ukrainian name. Optional per recipient — leave it blank and it's automatically transliterated to Latin script using the official Ukrainian national transliteration table (Resolution of the Cabinet of Ministers of Ukraine No. 55, 2010 — the same rules used for passports). Some recipients can have a custom English spelling while others are auto-transliterated, in the same request. |
 | 3 | **Назва тренінгу** | Text input, the course/training title in Ukrainian. |
 | 4 | **Назва тренінгу (англ.)** | Optional text input. If left blank, it's auto-translated from Ukrainian using a free translation service. If translation fails (e.g. no internet), the field is left blank and a warning is shown — you can fill it in manually and regenerate. |
 | 5 | **Локація** | Text input, location in Ukrainian (e.g. `м. Івано-Франківськ, Україна`). |
@@ -86,8 +97,7 @@ Generated filenames are sanitized and numbered, e.g. `01_Ivan_Petrenko.pdf`,
 
 The app validates input and reports problems in Ukrainian directly in the UI, including:
 
-- An empty list of recipient names.
-- A mismatched number of lines between the Ukrainian and English name lists.
+- An empty list of recipient names (all rows blank).
 - Translation/transliteration failures (translation falls back to a blank field with a
   warning; transliteration is fully offline and does not fail on network issues).
 - An invalid or unwritable output folder.
@@ -106,9 +116,29 @@ app/
   templates/index.html        Single-page form UI
   static/style.css, app.js    Styling and frontend behavior
 design_assets/                 Certificate template, logo, layout spec, fonts, reference PDF
+tests/                          Integration test suite (see "Running tests" below)
 requirements.txt
+requirements-dev.txt             Extra dependencies needed only to run the test suite
 run.bat / run.sh                Launcher scripts
 ```
+
+## Running tests
+
+An integration test suite covers the API, the rendering engine, and the previously
+reported layout bugs (long names/titles, every month's date string, the location/signature
+overlap, and the exact background color match), so regressions are caught automatically.
+
+```
+python -m venv .venv                     # if not already created
+.venv\Scripts\activate                   # Windows
+source .venv/bin/activate                # macOS/Linux
+pip install -r requirements-dev.txt
+pytest --html=tests/report.html --self-contained-html
+```
+
+This generates real PDF certificates for every test case under `tests/output/` (so you can
+open and visually inspect any of them) plus a human-readable `tests/report.html` summary.
+Both are gitignored — they're regenerated on every run and are not meant to be committed.
 
 ## Design assets
 

@@ -17,8 +17,10 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 
+import img2pdf
 from PIL import Image, ImageDraw, ImageFont
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -264,4 +266,16 @@ def render_certificate(fields: CertificateFields, output_pdf_path: Path) -> None
         _render_box(draw, box_spec["box_pt"], box_spec["lines"], texts)
 
     output_pdf_path.parent.mkdir(parents=True, exist_ok=True)
-    img.save(output_pdf_path, "PDF", resolution=_DPI)
+
+    # Pillow's built-in `Image.save(..., "PDF")` re-encodes RGB images as lossy
+    # JPEG (DCTDecode), which subtly shifts the exact background colors/edges.
+    # To keep the certificate's colors pixel-identical to the source design,
+    # encode the composited page as PNG (lossless) in memory, then wrap that
+    # losslessly (FlateDecode) into the final PDF via img2pdf.
+    png_buffer = BytesIO()
+    img.save(png_buffer, "PNG")
+    png_bytes = png_buffer.getvalue()
+
+    layout_fun = img2pdf.get_fixed_dpi_layout_fun((_DPI, _DPI))
+    pdf_bytes = img2pdf.convert(png_bytes, layout_fun=layout_fun)
+    output_pdf_path.write_bytes(pdf_bytes)

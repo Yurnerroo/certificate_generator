@@ -221,4 +221,9 @@ __marimo__/
 config.json
 /output/
 generated_certificates/
+.pyembed/
+
+# Integration test artifacts (generated PDFs + HTML report; not committed)
+/tests/output/
+/tests/report.html
 

@@ -11,6 +11,49 @@ const outputFolderInput = document.getElementById("output_folder");
 const browseBtn = document.getElementById("browse-btn");
 const generateBtn = document.getElementById("generate-btn");
 const resultPanel = document.getElementById("result-panel");
+const recipientsList = document.getElementById("recipients-list");
+const addRecipientBtn = document.getElementById("add-recipient-btn");
+
+let recipientRowCounter = 0;
+
+function addRecipientRow(nameUk = "", nameEn = "") {
+    recipientRowCounter += 1;
+    const rowId = `recipient-${recipientRowCounter}`;
+    const row = document.createElement("div");
+    row.className = "recipient-row";
+    row.dataset.rowId = rowId;
+    row.innerHTML = `
+        <input type="text" class="recipient-name-uk" placeholder="Марук Надія" value="${escapeHtmlAttr(nameUk)}" required>
+        <input type="text" class="recipient-name-en" placeholder="Залиште порожнім для автотранслітерації" value="${escapeHtmlAttr(nameEn)}">
+        <button type="button" class="btn-remove-recipient" title="Видалити отримувача">&times;</button>
+    `;
+    recipientsList.appendChild(row);
+    row.querySelector(".btn-remove-recipient").addEventListener("click", () => {
+        if (recipientsList.children.length > 1) {
+            row.remove();
+        } else {
+            row.querySelector(".recipient-name-uk").value = "";
+            row.querySelector(".recipient-name-en").value = "";
+        }
+    });
+}
+
+function escapeHtmlAttr(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML.replace(/"/g, "&quot;");
+}
+
+function collectRecipients() {
+    return Array.from(recipientsList.querySelectorAll(".recipient-row")).map((row) => ({
+        name_uk: row.querySelector(".recipient-name-uk").value.trim(),
+        name_en: row.querySelector(".recipient-name-en").value.trim(),
+    }));
+}
+
+addRecipientBtn.addEventListener("click", () => addRecipientRow());
+addRecipientRow();
+
 
 function updateDatePreview() {
     const monthIdx = parseInt(monthSelect.value, 10) - 1;
@@ -101,8 +144,7 @@ form.addEventListener("submit", async (event) => {
     resultPanel.classList.add("hidden");
 
     const payload = {
-        names_uk: document.getElementById("names_uk").value,
-        names_en: document.getElementById("names_en").value,
+        recipients: collectRecipients(),
         title_uk: document.getElementById("title_uk").value,
         title_en: document.getElementById("title_en").value,
         location_uk: document.getElementById("location_uk").value,
