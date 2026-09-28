@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Генератор сертифікатів — КВАДРАТ ЗДАНЕВИЧА</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="app-header">
+    <img src="/design_assets/logo.png" alt="КВАДРАТ ЗДАНЕВИЧА" class="logo">
+    <h1>Генератор сертифікатів</h1>
+</header>
+
+<main class="container">
+    <form id="cert-form" novalidate>
+        <section class="field-group">
+            <label for="names_uk">Імена отримувачів <span class="required">*</span></label>
+            <p class="hint">По одному повному імені на рядок. Кількість рядків = кількість сертифікатів.</p>
+            <textarea id="names_uk" name="names_uk" rows="6" required placeholder="Марук Надія&#10;Іваненко Петро"></textarea>
+        </section>
+
+        <section class="field-group">
+            <label for="names_en">Імена отримувачів (англ.)</label>
+            <p class="hint">Необов'язково. Якщо порожньо — транслітерується автоматично (офіційна таблиця). Має бути стільки ж рядків, скільки й вище.</p>
+            <textarea id="names_en" name="names_en" rows="6" placeholder="Залиште порожнім для автоматичної транслітерації"></textarea>
+        </section>
+
+        <div class="field-row">
+            <section class="field-group">
+                <label for="title_uk">Назва тренінгу <span class="required">*</span></label>
+                <input type="text" id="title_uk" name="title_uk" required placeholder="Стандарт роботи з клієнтами">
+            </section>
+            <section class="field-group">
+                <label for="title_en">Назва тренінгу (англ.)</label>
+                <input type="text" id="title_en" name="title_en" placeholder="Залиште порожнім для автоперекладу">
+            </section>
+        </div>
+
+        <div class="field-row">
+            <section class="field-group">
+                <label for="location_uk">Локація <span class="required">*</span></label>
+                <input type="text" id="location_uk" name="location_uk" required placeholder="м. Івано-Франківськ, Україна">
+            </section>
+            <section class="field-group">
+                <label for="location_en">Локація (англ.)</label>
+                <input type="text" id="location_en" name="location_en" placeholder="Залиште порожнім для автоперекладу">
+            </section>
+        </div>
+
+        <section class="field-group">
+            <label>Дата (Місяць, Рік) <span class="required">*</span></label>
+            <div class="field-row date-row">
+                <select id="month" name="month" required>
+                    {% for m in months %}
+                    <option value="{{ m.value }}" {% if m.value == current_month %}selected{% endif %}>{{ m.label }}</option>
+                    {% endfor %}
+                </select>
+                <input type="number" id="year" name="year" required min="2000" max="2100" value="{{ current_year }}">
+            </div>
+            <p class="hint" id="date-preview"></p>
+        </section>
+
+        <section class="field-group">
+            <label for="output_folder">Папка для збереження <span class="required">*</span></label>
+            <div class="field-row folder-row">
+                <input type="text" id="output_folder" name="output_folder" placeholder="C:\Certificates" value="{{ last_output_folder }}">
+                <button type="button" id="browse-btn" class="btn-secondary">Огляд...</button>
+            </div>
+        </section>
+
+        <div class="actions">
+            <button type="submit" id="generate-btn" class="btn-primary">Згенерувати сертифікати</button>
+        </div>
+    </form>
+
+    <div id="result-panel" class="result-panel hidden"></div>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
