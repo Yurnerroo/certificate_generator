@@ -5,6 +5,28 @@ cd "$(dirname "$0")"
 VENV_DIR=".venv"
 PYTHON="$VENV_DIR/bin/python"
 
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "Python 3 was not found on this system."
+    echo
+    case "$(uname -s)" in
+        Darwin)
+            echo "Install it with Homebrew:  brew install python"
+            echo "or download it from:       https://www.python.org/downloads/macos/"
+            ;;
+        Linux)
+            echo "Install it with your package manager, e.g.:"
+            echo "  sudo apt install python3 python3-venv   (Debian/Ubuntu)"
+            echo "  sudo dnf install python3                (Fedora)"
+            ;;
+        *)
+            echo "Download it from: https://www.python.org/downloads/"
+            ;;
+    esac
+    echo
+    echo "Then run this script again."
+    exit 1
+fi
+
 if [ ! -x "$PYTHON" ]; then
     echo "Creating virtual environment..."
     python3 -m venv "$VENV_DIR"

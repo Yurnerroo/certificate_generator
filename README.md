@@ -14,10 +14,21 @@ still too large, the font size is shrunk until everything fits neatly inside its
 
 ## Requirements
 
-- Python 3.9+ (Windows, macOS, or Linux)
+- Python 3.9+ (Windows, macOS, or Linux) — **not required on Windows**, see below.
 - Internet access is only needed for the optional auto-translation of course
   title/location into English — everything else, including transliteration of
   names, works fully offline.
+
+### No Python installed? (Windows)
+
+`run.bat` works even without Python pre-installed: if it can't find a system
+Python, it automatically downloads a small (~11 MB), private, portable Python
+runtime into a local `.pyembed/` folder — no admin rights, no installer, and
+nothing is added to your system PATH. This only happens once; subsequent runs
+reuse it. Internet access is required for this one-time download only. The
+portable runtime doesn't include `tkinter`, so the "Browse..." folder-picker
+dialog isn't available in that mode — just paste the output folder path into
+the text field instead.
 
 ## Quick start
 
