@@ -11,8 +11,21 @@ English field left blank for the user to fill in manually and regenerate).
 from __future__ import annotations
 
 import logging
+import re
 
 logger = logging.getLogger(__name__)
+
+# Some free translation backends (particularly the MyMemory fallback) return
+# proper nouns lowercase, e.g. "alicante, spain" instead of "Alicante, Spain".
+# This capitalizes the first letter of every word (after start-of-string,
+# whitespace, hyphen, or an opening bracket/quote) without touching letters
+# that are already uppercase, so a correctly-cased Google Translate result
+# passes through unchanged.
+_WORD_START_RE = re.compile(r"(^|[\s\-(\"'/])([a-z])")
+
+
+def _fix_capitalization(text: str) -> str:
+    return _WORD_START_RE.sub(lambda m: m.group(1) + m.group(2).upper(), text)
 
 
 class TranslationResult:
@@ -55,7 +68,7 @@ def translate_uk_to_en(text: str, field_label: str) -> TranslationResult:
     last_exc: Exception | None = None
     for translate_fn in (_translate_with_google, _translate_with_mymemory):
         try:
-            return TranslationResult(translate_fn(text), None)
+            return TranslationResult(_fix_capitalization(translate_fn(text)), None)
         except Exception as exc:  # noqa: BLE001 - try the next backend / degrade gracefully
             last_exc = exc
             logger.warning(

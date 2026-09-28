@@ -24,6 +24,7 @@ from conftest import (
     get_pdf_page_count,
     get_pdf_page_size_pt,
     ink_bbox_pt,
+    ink_row_bands_pt,
     render_pdf_page_to_image,
 )
 
@@ -133,6 +134,52 @@ class TestLongTitles:
         _, _, max_x, max_y = bbox
         assert max_x <= box_pt[2] + 1.0, f"title text overflowed box right edge (max_x={max_x})"
         assert max_y <= 459.0, f"title text overlaps the 'Бізнес-тренер' label (max_y={max_y})"
+
+
+class TestEnglishSmallerThanUkrainian:
+    """Regression test: the English translation line must always render
+    strictly smaller than the Ukrainian line, even when the Ukrainian text is
+    so long it has to shrink far below its own base font size. Before this
+    fix, each language was fit independently, so a short English line could
+    end up the same size as (or larger than) a heavily-shrunk Ukrainian one."""
+
+    _SHORT_TITLE_EN = "Customer Service Training Programme"
+
+    def test_en_shrinks_when_uk_is_forced_much_smaller(self, output_dir: Path):
+        box_pt = BOXES["title"]["box_pt"]
+
+        baseline_out = output_dir / "cert_baseline.pdf"
+        render_certificate(
+            make_fields(title_uk="Тест", title_en=self._SHORT_TITLE_EN),
+            baseline_out,
+        )
+        baseline_img = render_pdf_page_to_image(baseline_out)
+        baseline_bands = ink_row_bands_pt(baseline_img, box_pt, pad_pt=0.0)
+        assert len(baseline_bands) >= 2, "expected separate UK and EN ink bands"
+        baseline_en_height = baseline_bands[-1][1] - baseline_bands[-1][0]
+
+        stressed_out = output_dir / "cert_stressed.pdf"
+        long_title_uk = (
+            "Комплексна програма підвищення кваліфікації менеджерів середньої "
+            "ланки з питань клієнтського сервісу та ефективних комунікацій"
+        )
+        render_certificate(
+            make_fields(title_uk=long_title_uk, title_en=self._SHORT_TITLE_EN),
+            stressed_out,
+        )
+        stressed_img = render_pdf_page_to_image(stressed_out)
+        stressed_bands = ink_row_bands_pt(stressed_img, box_pt, pad_pt=0.0)
+        assert len(stressed_bands) >= 2, "expected separate UK and EN ink bands"
+        stressed_en_height = stressed_bands[-1][1] - stressed_bands[-1][0]
+
+        # Same English text in both cases -- if the fix works, the English
+        # line must shrink noticeably once the Ukrainian line is forced much
+        # smaller than its own base size (otherwise it would render at the
+        # exact same height as the unconstrained baseline).
+        assert stressed_en_height < baseline_en_height - 1.0, (
+            f"English text height did not shrink alongside the Ukrainian text "
+            f"(baseline={baseline_en_height:.2f}pt, stressed={stressed_en_height:.2f}pt)"
+        )
 
 
 class TestAllMonths:

@@ -44,19 +44,43 @@ if ($systemPyExe) {
         & $systemPyExe @systemPyPrefixArgs -m venv $VenvDir
         if ($LASTEXITCODE -ne 0) {
             Write-Host ""
-            Write-Host "Failed to create the virtual environment (see error above)."
-            Read-Host "Press Enter to close"
-            exit 1
+            Write-Host "Could not create a virtual environment with your installed Python."
+            Write-Host "Falling back to a bundled, known-compatible Python runtime instead..."
+            Write-Host ""
+            Remove-Item -Recurse -Force $VenvDir -ErrorAction SilentlyContinue
+            $systemPyExe = $null
         }
     }
+}
+
+if ($systemPyExe) {
     $Python = "$VenvDir\Scripts\python.exe"
-} else {
-    # --- No system Python found: download a private, portable copy. ---
+
+    Write-Host "Installing dependencies..."
+    & $Python -m pip install --quiet --upgrade pip
+    & $Python -m pip install --quiet -r requirements.txt
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Host "Installing dependencies failed with your installed Python version."
+        Write-Host "This is often caused by pip needing to compile a package from source"
+        Write-Host "(shown above as red `"Building wheel for X ... error`" messages) because"
+        Write-Host "no ready-made package exists for your specific Python version - not"
+        Write-Host "something wrong with your computer."
+        Write-Host "Falling back to a bundled Python runtime that is known to work well"
+        Write-Host "with this app..."
+        Write-Host ""
+        Remove-Item -Recurse -Force $VenvDir -ErrorAction SilentlyContinue
+        $systemPyExe = $null
+        $Python = $null
+    }
+}
+
+if (-not $systemPyExe) {
+    # --- Use (and if needed, download) a private, portable copy of Python. ---
     #     No admin rights or installer needed; it lives entirely inside
     #     this project folder (.pyembed) and is not put on the system PATH.
     $Python = "$EmbedDir\python.exe"
     if (-not (Test-Path $Python)) {
-        Write-Host "No Python installation was found on this computer."
         Write-Host "Downloading a portable Python $PyVersion runtime just for this app (~11 MB, one-time)..."
         if (-not (Test-Path $EmbedDir)) { New-Item -ItemType Directory -Path $EmbedDir | Out-Null }
 
@@ -102,20 +126,22 @@ if ($systemPyExe) {
         Write-Host "folder path into the text field instead."
         Write-Host ""
     }
-}
 
-Write-Host "Installing dependencies..."
-& $Python -m pip install --quiet --upgrade pip
-& $Python -m pip install --quiet -r requirements.txt
-if ($LASTEXITCODE -ne 0) {
-    Write-Host ""
-    Write-Host "Dependency installation failed. Re-running with full output so you can see why:"
-    Write-Host ""
-    & $Python -m pip install -r requirements.txt
-    Write-Host ""
-    Write-Host "(See the error above. A common cause is no internet access or a blocked/very restrictive network.)"
-    Read-Host "Press Enter to close"
-    exit 1
+    Write-Host "Installing dependencies..."
+    & $Python -m pip install --quiet --upgrade pip
+    & $Python -m pip install --quiet -r requirements.txt
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host ""
+        Write-Host "Dependency installation failed even with the bundled Python runtime."
+        Write-Host "Re-running with full output so you can see why:"
+        Write-Host ""
+        & $Python -m pip install -r requirements.txt
+        Write-Host ""
+        Write-Host "(A common cause is no internet access, or a corporate/school network"
+        Write-Host "that blocks access to pypi.org - ask IT to allow it if that's the case.)"
+        Read-Host "Press Enter to close"
+        exit 1
+    }
 }
 
 Write-Host "Starting Certificate Generator at http://127.0.0.1:8000 ..."
