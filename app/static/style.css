@@ -1,0 +1,172 @@
+:root {
+    --purple: #2e1a8c;
+    --yellow: #e8e83a;
+    --text: #1a1a18;
+    --bg: #f5f6fa;
+    --border: #d8dae3;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.app-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--purple);
+    padding: 14px 24px;
+    color: white;
+}
+
+.app-header .logo {
+    height: 48px;
+    width: auto;
+    border-radius: 4px;
+}
+
+.app-header h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.container {
+    max-width: 760px;
+    margin: 32px auto;
+    padding: 0 20px 60px;
+}
+
+#cert-form {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 32px;
+}
+
+.field-group {
+    margin-bottom: 20px;
+}
+
+.field-row {
+    display: flex;
+    gap: 20px;
+}
+
+.field-row .field-group {
+    flex: 1;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.required {
+    color: #c0392b;
+}
+
+.hint {
+    margin: 2px 0 6px;
+    font-size: 0.82rem;
+    color: #666;
+}
+
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.date-row select {
+    flex: 2;
+}
+
+.date-row input[type="number"] {
+    flex: 1;
+}
+
+.folder-row input {
+    flex: 1;
+}
+
+.actions {
+    margin-top: 28px;
+}
+
+.btn-primary, .btn-secondary {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 10px 20px;
+}
+
+.btn-primary {
+    background: var(--purple);
+    color: white;
+    width: 100%;
+}
+
+.btn-primary:hover { background: #241570; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-secondary {
+    background: var(--yellow);
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.btn-secondary:hover { background: #d6d62f; }
+
+.result-panel {
+    margin-top: 24px;
+    padding: 18px 22px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: white;
+}
+
+.result-panel.hidden { display: none; }
+
+.result-panel.success { border-left: 5px solid #2e7d32; }
+.result-panel.error { border-left: 5px solid #c0392b; }
+
+.result-panel h3 { margin-top: 0; }
+
+.result-panel .warnings {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #fff8e1;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.result-panel .files-list {
+    margin: 10px 0;
+    padding-left: 20px;
+    font-size: 0.9rem;
+}
+
+.result-panel .actions-row {
+    margin-top: 12px;
+    display: flex;
+    gap: 10px;
+}

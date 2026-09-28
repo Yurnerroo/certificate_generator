@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Certificate Generator app
+config.json
+/output/
+generated_certificates/
+

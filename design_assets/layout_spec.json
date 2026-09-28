@@ -1,0 +1,59 @@
+{
+  "page": {
+    "width_pt": 841.89,
+    "height_pt": 595.28,
+    "orientation": "landscape_A4",
+    "template_png": "certificate_template.png",
+    "template_png_dpi": 300,
+    "template_png_size_px": [3508, 2481],
+    "note": "template_png is the ORIGINAL certificate background with the 4 dynamic content areas whited-out (redacted). Everything else (logo, QR code, signature, static labels, decorative shapes) is preserved pixel-perfect from the real design. Compose final certificates by pasting this PNG as the page background, then drawing the dynamic text on top at the given point-coordinates, scaled to whatever DPI you render at (pixel = pt * dpi / 72)."
+  },
+  "fonts": {
+    "regular": "Arimo-Regular.ttf",
+    "bold": "Arimo-Bold.ttf",
+    "note": "Arimo is metric-compatible with Arial/Arial-Bold (the fonts used in the real PDF: 'ArialMT' and 'Arial-BoldMT'), OFL licensed, bundled locally so the app works fully offline."
+  },
+  "text_color": "#1a1a18",
+  "dynamic_boxes": {
+    "name": {
+      "box_pt": [409, 125, 762, 245],
+      "note": "Right edge capped at 762 to stay clear of the blue chevron decoration that starts at x=764.5 for y in [132,288]. Box is generous vertically (120pt) to allow the Ukrainian and/or English name to wrap to multiple lines and shrink font size if very long.",
+      "lines": [
+        {"lang": "uk", "font": "bold", "base_size_pt": 36, "orig_bbox_pt": [410.4, 142.2, 640.3, 178.2], "orig_text": "Марук Надія"},
+        {"lang": "en", "font": "regular_bold_look_ok", "base_size_pt": 18, "orig_bbox_pt": [410.4, 180.1, 527.4, 198.1], "orig_text": "Maruk Nadiia", "actual_font_in_pdf": "Arial-BoldMT (same bold font, smaller size)"}
+      ]
+    },
+    "title": {
+      "box_pt": [409, 280, 800, 452],
+      "note": "Static label above this box ('пройшов(ла) тренінг на тему:' / 'has passed training on the subject:') stays fixed at y ~248-273 and is NOT part of this box / NOT redacted (kept from template). This box only holds the dynamic training title. Right edge 800 and bottom 452 are chosen to stay clear of decorations and the 'Бізнес-тренер' static row which starts at y=460.",
+      "lines": [
+        {"lang": "uk", "font": "bold", "base_size_pt": 34.2, "example_wrapped_to_2_lines": true, "orig_bbox_line1_pt": [409.9, 318.6, 684.9, 352.8], "orig_bbox_line2_pt": [409.9, 358.8, 597.1, 393.0], "orig_text": "Стандарт роботи з клієнтами"},
+        {"lang": "en", "font": "bold", "base_size_pt": 17.1, "orig_bbox_pt": [409.9, 396.0, 619.5, 413.1], "orig_text": "Customer service standard"}
+      ]
+    },
+    "location": {
+      "box_pt": [409, 510, 648, 550],
+      "lines": [
+        {"lang": "uk", "font": "regular", "base_size_pt": 10.7, "orig_bbox_pt": [410.4, 522.4, 552.1, 533.1], "orig_text": "м. Івано-Франківськ, Україна"},
+        {"lang": "en", "font": "regular", "base_size_pt": 9.2, "orig_bbox_pt": [410.4, 534.2, 527.5, 543.4], "orig_text": "Ivano-Frankivsk city, Ukraine"}
+      ]
+    },
+    "date": {
+      "box_pt": [650, 510, 792, 550],
+      "lines": [
+        {"lang": "uk", "font": "regular", "base_size_pt": 10.7, "orig_bbox_pt": [656.2, 522.5, 722.2, 533.2], "orig_text": "Липень, 2026"},
+        {"lang": "en", "font": "regular", "base_size_pt": 9.2, "orig_bbox_pt": [656.2, 534.2, 698.0, 543.4], "orig_text": "July, 2026"}
+      ]
+    }
+  },
+  "static_elements_already_baked_into_template_png": [
+    "Logo cube icon + 'КВАДРАТ ЗДАНЕВИЧА' vertical text (top-left, on purple panel)",
+    "'СЕРТИФІКАТ' / 'CERTIFICATE' white heading on purple panel",
+    "'www.zdanevych.com.ua' on purple panel",
+    "QR code (bottom-left)",
+    "'пройшов(ла) тренінг на тему:' / 'has passed training on the subject:' label",
+    "'Бізнес-тренер' / 'Business-trainer' label + signature image + 'Михайло Зданевич' / 'Mykhailo Zdanevych' (trainer name is fixed, NOT an argument)",
+    "All decorative shapes: purple panel, white diagonal stripes, yellow shapes, blue chevrons, light-blue rectangles, yellow dot grid, bottom-right diagonal hatch lines"
+  ],
+  "sizing_rule": "If a name or title line's rendered width would exceed the box width at base_size_pt, first try wrapping onto additional line(s) within the box height; if it still overflows (too many lines or a single word wider than the box), progressively shrink the font size (e.g. in 0.5pt steps) until it fits both width and the box's vertical space. Keep the same shrink/wrap logic independently for the Ukrainian and English variants of a field so one long language doesn't shrink the other unnecessarily."
+}
