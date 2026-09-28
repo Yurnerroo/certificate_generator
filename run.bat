@@ -1,4 +1,9 @@
 @echo off
+rem If you are reading this because double-clicking run.bat does nothing or
+rem the console flashes and closes instantly, some antivirus/endpoint-security
+rem software on your machine may be blocking .bat script execution. Right-click
+rem "run.ps1" in this folder and choose "Run with PowerShell" instead - it does
+rem exactly the same thing as this script.
 setlocal enabledelayedexpansion
 cd /d "%~dp0"
 

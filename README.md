@@ -54,6 +54,22 @@ Either script will:
 
 To stop the server, close the terminal window or press `Ctrl+C`.
 
+### Windows: `run.bat` does nothing / console flashes and closes instantly?
+
+Some antivirus/endpoint-security products block `.bat` script execution
+outright (with no visible error). If that happens, use the included
+PowerShell equivalent instead — it does exactly the same thing:
+
+```
+Right-click run.ps1 → "Run with PowerShell"
+```
+
+or from an already-open PowerShell window:
+
+```
+powershell -ExecutionPolicy Bypass -File run.ps1
+```
+
 ### Manual setup (alternative)
 
 ```
