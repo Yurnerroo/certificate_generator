@@ -227,3 +227,6 @@ generated_certificates/
 /tests/output/
 /tests/report.html
 
+# Dev-only reference-comparison artifacts (regenerable, not committed)
+/scripts/_compare_output/
+

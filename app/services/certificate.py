@@ -21,11 +21,22 @@ from io import BytesIO
 from pathlib import Path
 
 import img2pdf
+import pikepdf
 from PIL import Image, ImageDraw, ImageFont
 
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _ASSETS_DIR = _PROJECT_ROOT / "design_assets"
 _FONTS_DIR = _ASSETS_DIR / "fonts"
+
+# The reference design's PDF draws its decorations as vector shapes tagged
+# with this exact sRGB ICC profile (extracted once from that file). Browser
+# PDF viewers (e.g. Chrome/Edge's PDFium) color-manage ICC-tagged content
+# differently than untagged "DeviceRGB" images, which made our raster-based
+# certificate visibly mismatch the reference's purple/yellow even though the
+# underlying RGB numbers were close. Tagging our output image with the same
+# profile makes the viewer apply an identical transform to both, so what the
+# user sees on screen actually matches -- not just the raw pixel values.
+_SRGB_ICC_PROFILE = (_ASSETS_DIR / "srgb_icc_profile.icc").read_bytes()
 
 with open(_ASSETS_DIR / "layout_spec.json", "r", encoding="utf-8") as _f:
     LAYOUT: dict = json.load(_f)
@@ -38,10 +49,61 @@ _FONT_FILES: dict[str, str] = LAYOUT["fonts"]
 _MIN_FONT_PT = 7.0          # absolute floor so text never becomes illegible
 _FONT_STEP_PT = 0.5
 _LINE_SPACING = 1.18        # multiplier applied to font ascent+descent
-_GAP_PT = 6.0                # vertical gap between the UK and EN sub-blocks
+# Vertical gap between the UK and EN sub-blocks. Measured directly from the
+# reference PDF's real text bounding boxes (layout_spec.json's orig_bbox_pt):
+# name 178.2->180.1 (~1.9pt), title 393.0->396.0 (~3.0pt), location
+# 533.1->534.2 (~1.1pt), date 533.2->534.2 (~1.0pt). 2.0pt matches all four
+# far more closely than the previous 6.0pt, which rendered a visibly bigger
+# gap than the original design.
+_GAP_PT = 2.0
 
 _font_cache: dict[tuple[str, int], ImageFont.FreeTypeFont] = {}
 _template_image: Image.Image | None = None
+
+
+def _reference_gap_pt(lines_spec: list[dict]) -> float:
+    """Compute the true UK->EN ink-to-ink gap (in pt) for one dynamic box from
+    its ground-truth orig_bbox_pt measurements in layout_spec.json.
+
+    These bboxes were measured directly from the real reference PDF's text
+    positions, so they capture the designer's actual tight spacing. Our own
+    nominal font-metric line height (ascent+descent) includes extra padding
+    that isn't inked for most Cyrillic/Latin text, which made the gap look
+    visibly larger than the reference even with a small `_GAP_PT`. Using this
+    measured value as the *rendering* target (see `_render_box`'s ink-bbox
+    positioning) instead of just a flat constant reproduces the original
+    spacing far more closely.
+    """
+    uk_spec = next((s for s in lines_spec if s["lang"] == "uk"), None)
+    en_spec = next((s for s in lines_spec if s["lang"] == "en"), None)
+    if not uk_spec or not en_spec:
+        return _GAP_PT
+    uk_bbox = uk_spec.get("orig_bbox_line2_pt") or uk_spec.get("orig_bbox_pt")
+    en_bbox = en_spec.get("orig_bbox_pt")
+    if not uk_bbox or not en_bbox:
+        return _GAP_PT
+    return max(0.0, en_bbox[1] - uk_bbox[3])
+
+
+def _reference_top_offset_pt(box_pt: list[float], lines_spec: list[dict]) -> float | None:
+    """How far down from the box's top edge the reference design's first
+    (Ukrainian) line's ink actually starts, in pt.
+
+    Centering the whole UK+EN block inside its (often much taller, to leave
+    room for long names/titles) box looked visibly off vs. the reference,
+    which anchors content a fixed distance from the box top instead. Reusing
+    the same ground-truth orig_bbox_pt measurements already used for the gap
+    gives us that exact anchor for the common case (short text, same line
+    count as the reference); callers should still fall back to centering if
+    honoring it would overflow the box.
+    """
+    uk_spec = next((s for s in lines_spec if s["lang"] == "uk"), None)
+    if not uk_spec:
+        return None
+    uk_bbox = uk_spec.get("orig_bbox_line1_pt") or uk_spec.get("orig_bbox_pt")
+    if not uk_bbox:
+        return None
+    return uk_bbox[1] - box_pt[1]
 
 
 @dataclass
@@ -249,15 +311,47 @@ def _render_box(
         return
 
     active_langs = [spec["lang"] for spec in lines_spec if spec["lang"] in fits]
-    total_height = sum(fits[lang].block_height for lang in active_langs) + gap_px * max(0, len(active_langs) - 1)
-    y_cursor = y0 + max(0.0, (box_height - total_height) / 2.0)
+    target_gap_px = _reference_gap_pt(lines_spec) * PT_TO_PX
+    total_height = sum(fits[lang].block_height for lang in active_langs) + target_gap_px * max(
+        0, len(active_langs) - 1
+    )
 
-    for lang in active_langs:
+    # Prefer anchoring the block exactly where the reference design starts it
+    # (measured from the real reference PDF), rather than centering it inside
+    # the box. The box is deliberately taller than the shortest possible text
+    # so long names/titles have room to wrap without overflowing, but for
+    # typical (shorter) text that leaves a lot of empty space below -- pure
+    # centering then starts the text noticeably lower than the reference.
+    # Fall back to centering only if that anchor would overflow the box
+    # (e.g. unusually long text needing extra wrapped lines).
+    y_cursor = None
+    anchor_offset_pt = _reference_top_offset_pt(box_pt, lines_spec)
+    if anchor_offset_pt is not None and active_langs and fits[active_langs[0]].lines:
+        first_fit = fits[active_langs[0]]
+        _, top_ink_first, _, _ = first_fit.font.getbbox(first_fit.lines[0])
+        candidate_y0 = y0 + anchor_offset_pt * PT_TO_PX - top_ink_first
+        if candidate_y0 >= y0 - 0.5 and candidate_y0 + total_height <= y1 + 0.5:
+            y_cursor = candidate_y0
+    if y_cursor is None:
+        y_cursor = y0 + max(0.0, (box_height - total_height) / 2.0)
+
+    prev_block_ink_bottom: float | None = None
+    for block_idx, lang in enumerate(active_langs):
         fit = fits[lang]
-        for line in fit.lines:
+        for line_idx, line in enumerate(fit.lines):
+            if block_idx > 0 and line_idx == 0 and prev_block_ink_bottom is not None:
+                # Reposition this block's first line precisely: nominal
+                # per-line advancement (ascent+descent) includes unused
+                # padding above/below the actual glyph ink, which otherwise
+                # makes the UK->EN gap look much bigger than the reference.
+                # Use the font's real ink bbox so the *visible* gap matches
+                # the reference's measured spacing, not just the nominal one.
+                _, top_ink, _, _ = fit.font.getbbox(line)
+                y_cursor = prev_block_ink_bottom + target_gap_px - top_ink
             draw.text((x0, y_cursor), line, font=fit.font, fill=TEXT_COLOR)
+            _, _, _, bottom_ink = fit.font.getbbox(line)
+            prev_block_ink_bottom = y_cursor + bottom_ink
             y_cursor += fit.line_height
-        y_cursor += gap_px
 
 
 def render_certificate(fields: CertificateFields, output_pdf_path: Path) -> None:
@@ -291,4 +385,34 @@ def render_certificate(fields: CertificateFields, output_pdf_path: Path) -> None
 
     layout_fun = img2pdf.get_fixed_dpi_layout_fun((_DPI, _DPI))
     pdf_bytes = img2pdf.convert(png_bytes, layout_fun=layout_fun)
+    pdf_bytes = _tag_page_image_with_srgb_icc(pdf_bytes)
     output_pdf_path.write_bytes(pdf_bytes)
+
+
+def _tag_page_image_with_srgb_icc(pdf_bytes: bytes) -> bytes:
+    """Re-tag the page's image XObject(s) with the reference design's exact
+    sRGB ICC profile instead of img2pdf's default untagged DeviceRGB.
+
+    Without this, PDF viewers that color-manage ICC-tagged content (as the
+    reference PDF's vector shapes are) but not plain DeviceRGB images render
+    the *same* nominal RGB values as visibly different colors on screen --
+    which is what caused the certificate's purple/yellow to look off even
+    after the pixel values were corrected to match.
+    """
+    with pikepdf.open(BytesIO(pdf_bytes)) as pdf:
+        icc_stream = pikepdf.Stream(pdf, _SRGB_ICC_PROFILE)
+        icc_stream.N = 3
+        icc_stream.Alternate = pikepdf.Name("/DeviceRGB")
+        icc_colorspace = pikepdf.Array([pikepdf.Name("/ICCBased"), icc_stream])
+
+        for page in pdf.pages:
+            xobjects = page.Resources.get("/XObject", {})
+            for xobj in xobjects.values():
+                if xobj.get("/Subtype") == pikepdf.Name("/Image") and xobj.get("/ColorSpace") == pikepdf.Name(
+                    "/DeviceRGB"
+                ):
+                    xobj.ColorSpace = icc_colorspace
+
+        out = BytesIO()
+        pdf.save(out)
+        return out.getvalue()
