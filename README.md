@@ -1,6 +1,6 @@
 # Certificate Generator
 
-A local-only web app that generates pixel-perfect PDF certificates for XXX XXX
+A local-only web app that generates pixel-perfect PDF certificates for
 training courses. It runs entirely on your own machine — there is no cloud deployment,
 no external hosting, and (aside from optional auto-translation) no dependency on the
 internet.
