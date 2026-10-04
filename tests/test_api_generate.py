@@ -14,7 +14,7 @@ client = TestClient(app)
 
 def base_payload(default_folder: Path, **overrides) -> dict:
     payload = {
-        "recipients": [{"name_uk": "Марук Надія", "name_en": "Maruk Nadiia"}],
+        "recipients": [{"name_uk": "Коваль Марія", "name_en": "Koval Mariia"}],
         "title_uk": "Стандарт роботи з клієнтами",
         "title_en": "Customer service standard",
         "location_uk": "м. Івано-Франківськ, Україна",
@@ -43,7 +43,7 @@ class TestHappyPath:
         payload = base_payload(
             output_dir,
             recipients=[
-                {"name_uk": "Марук Надія", "name_en": "Custom Spelling"},
+                {"name_uk": "Коваль Марія", "name_en": "Custom Spelling"},
                 {"name_uk": "Зданевич Юрій", "name_en": ""},
             ],
         )
@@ -61,7 +61,7 @@ class TestHappyPath:
         payload = base_payload(
             output_dir,
             recipients=[
-                {"name_uk": "Марук Надія", "name_en": ""},
+                {"name_uk": "Коваль Марія", "name_en": ""},
                 {"name_uk": "   ", "name_en": "should be ignored"},
             ],
         )
@@ -75,8 +75,8 @@ class TestHappyPath:
         payload = base_payload(
             output_dir,
             recipients=[
-                {"name_uk": "Марук Надія", "name_en": ""},
-                {"name_uk": "Марук Надія", "name_en": ""},
+                {"name_uk": "Коваль Марія", "name_en": ""},
+                {"name_uk": "Коваль Марія", "name_en": ""},
             ],
         )
         resp = client.post("/api/generate", json=payload)

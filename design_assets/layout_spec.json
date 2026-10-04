@@ -19,8 +19,8 @@
       "box_pt": [409, 125, 762, 245],
       "note": "Right edge capped at 762 to stay clear of the blue chevron decoration that starts at x=764.5 for y in [132,288]. Box is generous vertically (120pt) to allow the Ukrainian and/or English name to wrap to multiple lines and shrink font size if very long.",
       "lines": [
-        {"lang": "uk", "font": "bold", "base_size_pt": 36, "orig_bbox_pt": [410.4, 142.2, 640.3, 178.2], "orig_text": "Марук Надія"},
-        {"lang": "en", "font": "regular_bold_look_ok", "base_size_pt": 18, "orig_bbox_pt": [410.4, 180.1, 527.4, 198.1], "orig_text": "Maruk Nadiia", "actual_font_in_pdf": "Arial-BoldMT (same bold font, smaller size)"}
+        {"lang": "uk", "font": "bold", "base_size_pt": 36, "orig_bbox_pt": [410.4, 142.2, 640.3, 178.2], "orig_text": "Коваль Марія"},
+        {"lang": "en", "font": "regular_bold_look_ok", "base_size_pt": 18, "orig_bbox_pt": [410.4, 180.1, 527.4, 198.1], "orig_text": "Koval Mariia", "actual_font_in_pdf": "Arial-BoldMT (same bold font, smaller size)"}
       ]
     },
     "title": {

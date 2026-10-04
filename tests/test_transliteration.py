@@ -9,7 +9,7 @@ from app.services.transliteration import transliterate, transliterate_name
 @pytest.mark.parametrize(
     "uk,expected",
     [
-        ("Марук Надія", "Maruk Nadiia"),
+        ("Коваль Марія", "Koval Mariia"),
         ("Зданевич Юрій", "Zdanevych Yurii"),
         ("Євген", "Yevhen"),
         ("Їжак", "Yizhak"),
@@ -43,4 +43,4 @@ def test_preserves_non_cyrillic_and_digits():
 
 
 def test_transliterate_name_trims_whitespace():
-    assert transliterate_name("  Марук Надія  ") == "Maruk Nadiia"
+    assert transliterate_name("  Коваль Марія  ") == "Koval Mariia"

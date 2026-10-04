@@ -107,7 +107,7 @@ doesn't exist. After generation, a success summary lists the generated files and
 open the output folder directly (Windows only).
 
 Generated filenames are sanitized and numbered, e.g. `01_Ivan_Petrenko.pdf`,
-`02_Maruk_Nadiia.pdf`.
+`02_Koval_Mariia.pdf`.
 
 ## Error handling
 

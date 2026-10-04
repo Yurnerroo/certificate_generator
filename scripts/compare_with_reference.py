@@ -1,7 +1,7 @@
 """Integration/visual-comparison script (dev tool, not part of the app).
 
 Generates one certificate PDF through the real rendering engine using the
-exact same fields as the reference design ("Марук Надія"), then opens both
+exact same fields as the reference design ("Коваль Марія"), then opens both
 the freshly generated PDF and the original reference PDF so a human can
 compare them side by side.
 
@@ -25,8 +25,8 @@ OUTPUT_DIR = PROJECT_ROOT / "scripts" / "_compare_output"
 OUTPUT_PDF = OUTPUT_DIR / "generated_comparison.pdf"
 
 FIELDS = CertificateFields(
-    name_uk="Марук Надія",
-    name_en="Maruk Nadiia",
+    name_uk="Коваль Марія",
+    name_en="Koval Mariia",
     title_uk="Стандарт роботи з клієнтами",
     title_en="Customer service standard",
     location_uk="м. Івано-Франківськ, Україна",

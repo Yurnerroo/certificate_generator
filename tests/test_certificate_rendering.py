@@ -34,8 +34,8 @@ REFERENCE_PDF = DESIGN_ASSETS_DIR / "example_certificate_reference.pdf"
 
 def make_fields(**overrides) -> CertificateFields:
     base = dict(
-        name_uk="Марук Надія",
-        name_en="Maruk Nadiia",
+        name_uk="Коваль Марія",
+        name_en="Koval Mariia",
         title_uk="Стандарт роботи з клієнтами",
         title_en="Customer service standard",
         location_uk="м. Івано-Франківськ, Україна",

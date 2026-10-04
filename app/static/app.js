@@ -23,7 +23,7 @@ function addRecipientRow(nameUk = "", nameEn = "") {
     row.className = "recipient-row";
     row.dataset.rowId = rowId;
     row.innerHTML = `
-        <input type="text" class="recipient-name-uk" placeholder="Марук Надія" value="${escapeHtmlAttr(nameUk)}" required>
+        <input type="text" class="recipient-name-uk" placeholder="Коваль Марія" value="${escapeHtmlAttr(nameUk)}" required>
         <input type="text" class="recipient-name-en" placeholder="Залиште порожнім для автотранслітерації" value="${escapeHtmlAttr(nameEn)}">
         <button type="button" class="btn-remove-recipient" title="Видалити отримувача">&times;</button>
     `;
